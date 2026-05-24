@@ -214,6 +214,7 @@ export class CsvStoreClass {
   // ── File & parsing ──────────────────────────────────────────────
   csvFile: File | null = null;
   csvHeaders: string[] = [];
+  columnTypes: Record<string, string> = {};
   parseError: string | null = null;
   isLoading: boolean = false;
 
@@ -238,6 +239,7 @@ export class CsvStoreClass {
     makeObservable(this, {
       csvFile: observable,
       csvHeaders: observable,
+      columnTypes: observable,
       parseError: observable,
       isLoading: observable,
       totalRows: observable,
@@ -277,6 +279,9 @@ export class CsvStoreClass {
   }
   setCsvHeaders(headers: string[]) {
     this.csvHeaders = headers;
+  }
+  setColumnTypes(types: Record<string, string>) {
+    this.columnTypes = types;
   }
   setParseError(error: string | null) {
     this.parseError = error;
@@ -337,6 +342,7 @@ export class CsvStoreClass {
   resetStore() {
     this.csvFile = null;
     this.csvHeaders = [];
+    this.columnTypes={};
     this.parseError = null;
     this.isLoading = false;
     this.totalRows = 0;

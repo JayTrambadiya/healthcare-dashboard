@@ -8,8 +8,6 @@ import {
   Title,
   Text,
   Card,
-  Button,
-  Group,
   // Button,
   // Group,
 } from "@mantine/core";
@@ -59,75 +57,75 @@ const CSVStepper: React.FC = observer(() => {
   console.log("Current Step:", csvStore.currentStep);
 
   return (
-    <Container
-      size="xl"
-      py="xl"
-      h="100vh"
-      style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
-    >
-      <Stack
-        gap="lg"
-        h="100%"
-        style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
+      <Container
+          size="xl"
+          py="xl"
+          h="100vh"
+          style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
       >
-        {/* Header */}
-        <Box mb="lg" style={{ flexShrink: 0 }}>
-          <Title order={1} mb="xs">
-            CSV Data Upload & Processing
-          </Title>
-          <Text c="dimmed">
-            Upload a CSV file, edit the data in an interactive grid, and submit
-            to AWS S3
-          </Text>
-        </Box>
-
-        {/* Stepper */}
-        <Card withBorder style={{ flexShrink: 0 }}>
-          <Stepper active={csvStore.currentStep} size="lg">
-            {steps.map((step, index) => (
-              <Stepper.Step
-                key={index}
-                label={step.label}
-                description={step.description}
-                icon={step.icon}
-              />
-            ))}
-            <Stepper.Completed>
-              Completed, click back button to get to previous step
-            </Stepper.Completed>
-          </Stepper>
-        </Card>
-
-        {/* Content */}
-        <Card
-          withBorder
-          p="lg"
-          style={{
-            flex: 1,
-            minHeight: 0,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
+        <Stack
+            gap="lg"
+            h="100%"
+            style={{ display: "flex", flexDirection: "column", overflow: "hidden" }}
         >
-          {/* {csvStore.currentStep === 0 && <Step1Upload />}
+          {/* Header */}
+          <Box mb="lg" style={{ flexShrink: 0 }}>
+            <Title order={1} mb="xs">
+              CSV Data Upload & Processing
+            </Title>
+            <Text c="dimmed">
+              Upload a CSV file, edit the data in an interactive grid, and submit
+              to AWS S3
+            </Text>
+          </Box>
+
+          {/* Stepper */}
+          <Card withBorder style={{ flexShrink: 0 }}>
+            <Stepper active={csvStore.currentStep} size="lg">
+              {steps.map((step, index) => (
+                  <Stepper.Step
+                      key={index}
+                      label={step.label}
+                      description={step.description}
+                      icon={step.icon}
+                  />
+              ))}
+              <Stepper.Completed>
+                Completed, click back button to get to previous step
+              </Stepper.Completed>
+            </Stepper>
+          </Card>
+
+          {/* Content */}
+          <Card
+              withBorder
+              p="lg"
+              style={{
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+          >
+            {/* {csvStore.currentStep === 0 && <Step1Upload />}
           {csvStore.currentStep === 1 && <Step2EditGrid />}
           {csvStore.currentStep === 2 && <Step3Submit />} */}
-          <Box
-            style={{
-              flex: 1,
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-          >
-            {csvStore.currentStep === 0 && <UploadCSV />}
-            {csvStore.currentStep === 1 && <ReviewCSV />}
-            {csvStore.currentStep === 2 && <div>step 3</div>}
-          </Box>
-        </Card>
-        {/* <Group justify="center" mt="xl">
+            <Box
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                }}
+            >
+              {csvStore.currentStep === 0 && <UploadCSV />}
+              {csvStore.currentStep === 1 && <ReviewCSV />}
+              {csvStore.currentStep === 2 && <div>step 3</div>}
+            </Box>
+          </Card>
+          {/* <Group justify="center" mt="xl">
           <Button
             variant="default"
             onClick={() => {
@@ -148,8 +146,8 @@ const CSVStepper: React.FC = observer(() => {
             Next step
           </Button>
         </Group> */}
-      </Stack>
-    </Container>
+        </Stack>
+      </Container>
   );
 });
 

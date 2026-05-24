@@ -20,10 +20,10 @@ export interface ChunkResult {
  */
 
 export const parseCSVWithChunks = (
-  file: File,
-  onChunk?: (result: ChunkResult) => void,
-  onComplete?: (result: ParseResult) => void,
-  onError?: (error: string) => void,
+    file: File,
+    onChunk?: (result: ChunkResult) => void| Promise<void>,
+    onComplete?: (result: ParseResult) => void,
+    onError?: (error: string) => void,
 ): void => {
   const allData: Array<Record<string, string | number | boolean | null>> = [];
   let headers: string[] = [];
@@ -32,7 +32,7 @@ export const parseCSVWithChunks = (
 
   Papa.parse(file, {
     // Config for chunked parsing
-    chunk: (results) => {
+    chunk: (results,parser) => {
       chunkCount++;
 
       // Extract headers from first chunk
@@ -50,11 +50,11 @@ export const parseCSVWithChunks = (
       const chunkObjects = results.data.map((row: any) => {
         if (Array.isArray(row)) {
           return headers.reduce(
-            (obj, header, index) => {
-              obj[header] = row[index] ?? null;
-              return obj;
-            },
-            {} as Record<string, string | number | boolean | null>,
+              (obj, header, index) => {
+                obj[header] = row[index] ?? null;
+                return obj;
+              },
+              {} as Record<string, string | number | boolean | null>,
           );
         }
         return row;
@@ -64,16 +64,16 @@ export const parseCSVWithChunks = (
 
       // Fire chunk callback for progress tracking
       if (onChunk) {
-        onChunk({
+        parser.pause();
+        Promise.resolve(onChunk({
           data: chunkObjects,
           errors: results.errors,
           pageNumber: chunkCount,
-        });
+        })).then(() => parser.resume())          // ← resume after IDB write done
+            .catch(() => parser.abort());
       }
     },
 
-    // Enable web worker for non-blocking parsing
-    worker: true,
 
     // Skip empty lines
     skipEmptyLines: true,
@@ -87,12 +87,15 @@ export const parseCSVWithChunks = (
     // Max chunk size (in bytes) - adjust based on memory constraints
     chunkSize: 1 * 512 * 1024, // 512KB chunks
 
+
+    dynamicTyping: true,// auto-converts "123" → 123, "true" → true
+
     // Callbacks
     complete: () => {
       if (onComplete) {
         onComplete({
           data: allData as Array<
-            Record<string, string | number | boolean | null>
+              Record<string, string | number | boolean | null>
           >,
           headers: headers,
         });

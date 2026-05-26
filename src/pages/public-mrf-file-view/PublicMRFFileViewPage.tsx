@@ -19,8 +19,6 @@ import {
   type JobRecord,
 } from "../../services/api/jobsApi";
 
-type FlatPair = { key: string; value: string };
-
 type JsonRow = Record<string, unknown>;
 
 const PublicMRFFileViewPage: React.FC<{ isDark: boolean }> = () => {
@@ -44,7 +42,11 @@ const PublicMRFFileViewPage: React.FC<{ isDark: boolean }> = () => {
         if (details.mrfFileUrl) {
           const raw = await fetchPublicJsonFromUrl(details.mrfFileUrl);
           if (!mounted) return;
-          setJsonData(raw?.data || []);
+          const payload =
+            raw && typeof raw === "object" && "data" in raw
+              ? (raw as { data?: unknown }).data
+              : raw;
+          setJsonData(payload ?? []);
         }
       } catch (e) {
         if (!mounted) return;
@@ -62,26 +64,6 @@ const PublicMRFFileViewPage: React.FC<{ isDark: boolean }> = () => {
       mounted = false;
     };
   }, [jobId]);
-
-  const metaRows = useMemo<FlatPair[]>(() => {
-    if (!job) return [];
-    return [
-      { key: "jobId", value: job.jobId },
-      { key: "status", value: job.status },
-      { key: "isMrfFileReady", value: String(job.isMrfFileReady) },
-      { key: "createdAt", value: job.createdAt },
-      { key: "updatedAt", value: job.updatedAt },
-      { key: "mrfFileUrl", value: job.mrfFileUrl },
-    ];
-  }, [job]);
-
-  const metaCols = useMemo<ColDef<FlatPair>[]>(
-    () => [
-      { field: "key", headerName: "Field", minWidth: 180, flex: 1 },
-      { field: "value", headerName: "Value", minWidth: 500, flex: 3 },
-    ],
-    [],
-  );
 
   const jsonRows = useMemo<JsonRow[]>(() => {
     if (Array.isArray(jsonData)) {

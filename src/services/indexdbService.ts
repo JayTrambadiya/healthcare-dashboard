@@ -15,28 +15,27 @@
  * window, which is fine for up to ~500 k rows on modern hardware.
  */
 
-import { Dexie, type EntityTable } from 'dexie';
+import { Dexie, type EntityTable } from "dexie";
 
 // Generate a unique DB name per tab, persisted for the tab's lifetime
-const getTabDbName =(): string =>{
+const getTabDbName = (): string => {
   let name = sessionStorage.getItem("csv_db_tab_id");
   if (!name) {
     name = `csv_upload_db_${Date.now()}_${Math.random().toString(36).slice(2)}`;
     sessionStorage.setItem("csv_db_tab_id", name);
   }
   return name;
-}
+};
 
 export interface CsvRow {
   rowIndex?: number;
   [key: string]: string | number | boolean | null | undefined;
 }
 
-
 export interface QueryParams {
   startRow: number;
   endRow: number;
-  filterModel?: Record<string, any >;
+  filterModel?: Record<string, any>;
   sortModel?: Array<{ colId: string; sort: "asc" | "desc" }>;
 }
 
@@ -63,16 +62,12 @@ class CsvDB extends Dexie {
 
 export const db = new CsvDB();
 
-
-
 // ─── Open / upgrade ────────────────────────────────────────────────────────
 export async function openDB(): Promise<void> {
   if (!db.isOpen()) {
     await db.open();
   }
 }
-
-
 
 // ─── Clear all rows (called on new file upload) ────────────────────────────
 export async function clearAllRows(): Promise<void> {
@@ -81,7 +76,7 @@ export async function clearAllRows(): Promise<void> {
 
 export async function resetDatabase(): Promise<void> {
   if (db.isOpen()) db.close();
-  await Dexie.delete(db.name);  // ← use db.name instead of DB_NAME constant
+  await Dexie.delete(db.name); // ← use db.name instead of DB_NAME constant
   await db.open();
 }
 
@@ -97,42 +92,29 @@ export async function getTotalCount(): Promise<number> {
 }
 
 // ─── Query rows (used by AG Grid getRows) ─────────────────────────────────
-export async function queryRows(
-    params: QueryParams,
-): Promise<QueryResult> {
-  const {
-    startRow,
-    endRow,
-    filterModel = {},
-    sortModel = [],
-  } = params;
+export async function queryRows(params: QueryParams): Promise<QueryResult> {
+  const { startRow, endRow, filterModel = {}, sortModel = [] } = params;
 
   const pageSize = endRow - startRow;
 
-  const hasFilters =
-      Object.keys(filterModel).length > 0;
+  const hasFilters = Object.keys(filterModel).length > 0;
 
-  const hasSort =
-      sortModel.length > 0;
+  const hasSort = sortModel.length > 0;
 
   if (!hasFilters && !hasSort) {
-    const [rows, totalCount] =
-        await Promise.all([
-          db.csv_rows
-              .orderBy("rowIndex")
-              .offset(startRow)
-              .limit(pageSize)
-              .toArray(),
+    const [rows, totalCount] = await Promise.all([
+      db.csv_rows
+        .orderBy("rowIndex")
+        .offset(startRow)
+        .limit(pageSize)
+        .toArray(),
 
-          db.csv_rows.count(),
-        ]);
+      db.csv_rows.count(),
+    ]);
 
     return {
       rows,
-      lastRow:
-          endRow >= totalCount
-              ? totalCount
-              : -1,
+      lastRow: endRow >= totalCount ? totalCount : -1,
     };
   }
 
@@ -142,21 +124,14 @@ export async function queryRows(
    * Uses IndexedDB cursor iteration.
    * Avoids loading full DB first.
    */
-  const collection =
-      db.csv_rows
-          .orderBy("rowIndex")
-          .filter((row) =>
-              matchesFilters(
-                  row,
-                  filterModel,
-              ),
-          );
+  const collection = db.csv_rows
+    .orderBy("rowIndex")
+    .filter((row) => matchesFilters(row, filterModel));
 
   /**
    * COUNT FILTERED ROWS
    */
-  const totalFiltered =
-      await collection.count();
+  const totalFiltered = await collection.count();
 
   /**
    * NO SORT
@@ -164,18 +139,11 @@ export async function queryRows(
    * Fully paginated in IndexedDB.
    */
   if (!hasSort) {
-    const rows =
-        await collection
-            .offset(startRow)
-            .limit(pageSize)
-            .toArray();
+    const rows = await collection.offset(startRow).limit(pageSize).toArray();
 
     return {
       rows,
-      lastRow:
-          endRow >= totalFiltered
-              ? totalFiltered
-              : -1,
+      lastRow: endRow >= totalFiltered ? totalFiltered : -1,
     };
   }
 
@@ -192,39 +160,26 @@ export async function queryRows(
    *
    * Much faster than sorting whole DB.
    */
-  const filteredRows =
-      await collection.toArray();
+  const filteredRows = await collection.toArray();
 
-  filteredRows.sort((a, b) =>
-      compareRows(a, b, sortModel),
-  );
+  filteredRows.sort((a, b) => compareRows(a, b, sortModel));
 
-  const page =
-      filteredRows.slice(
-          startRow,
-          endRow,
-      );
+  const page = filteredRows.slice(startRow, endRow);
 
   return {
     rows: page,
-    lastRow:
-        endRow >= totalFiltered
-            ? totalFiltered
-            : -1,
+    lastRow: endRow >= totalFiltered ? totalFiltered : -1,
   };
 }
 
-async function fetchRowRange(
-    start: number,
-    end: number,
-): Promise<CsvRow[]> {
+// @ts-ignore
+async function fetchRowRange(start: number, end: number): Promise<CsvRow[]> {
   return db.csv_rows
-      .orderBy("rowIndex")
-      .offset(start)
-      .limit(end - start)
-      .toArray();
+    .orderBy("rowIndex")
+    .offset(start)
+    .limit(end - start)
+    .toArray();
 }
-
 
 export async function fetchAllRows(): Promise<CsvRow[]> {
   return db.csv_rows.toArray();
@@ -237,83 +192,61 @@ export async function fetchAllRows(): Promise<CsvRow[]> {
  * AG Grid filterModel compatible
  */
 function matchesFilters(
-    row: CsvRow,
-    filterModel: Record<string, any>,
+  row: CsvRow,
+  filterModel: Record<string, any>,
 ): boolean {
-
   for (const [col, condition] of Object.entries(filterModel)) {
-
     const cellVal = row[col];
 
     /**
      * NUMBER FILTERS
      */
     if (condition.filterType === "number") {
+      const cell = Number(cellVal);
 
-      const cell =
-          Number(cellVal);
+      const filter = Number(condition.filter);
 
-      const filter =
-          Number(condition.filter);
-
-      const filterTo =
-          Number(condition.filterTo);
+      const filterTo = Number(condition.filterTo);
 
       switch (condition.type) {
-
         case "equals":
-          if (cell !== filter)
-            return false;
+          if (cell !== filter) return false;
           break;
 
         case "notEqual":
-          if (cell === filter)
-            return false;
+          if (cell === filter) return false;
           break;
 
         case "greaterThan":
-          if (!(cell > filter))
-            return false;
+          if (!(cell > filter)) return false;
           break;
 
         case "greaterThanOrEqual":
-          if (!(cell >= filter))
-            return false;
+          if (!(cell >= filter)) return false;
           break;
 
         case "lessThan":
-          if (!(cell < filter))
-            return false;
+          if (!(cell < filter)) return false;
           break;
 
         case "lessThanOrEqual":
-          if (!(cell <= filter))
-            return false;
+          if (!(cell <= filter)) return false;
           break;
 
         case "inRange":
-          if (
-              !(cell >= filter &&
-                  cell <= filterTo)
-          ) {
+          if (!(cell >= filter && cell <= filterTo)) {
             return false;
           }
           break;
 
         case "blank":
-          if (
-              cellVal != null &&
-              cellVal !== ""
-          ) {
+          if (cellVal != null && cellVal !== "") {
             return false;
           }
           break;
 
         case "notBlank":
-          if (
-              cellVal == null ||
-              cellVal === ""
-          ) {
+          if (cellVal == null || cellVal === "") {
             return false;
           }
           break;
@@ -325,54 +258,41 @@ function matchesFilters(
     /**
      * TEXT FILTERS
      */
-    const cell =
-        String(cellVal ?? "")
-            .toLowerCase();
+    const cell = String(cellVal ?? "").toLowerCase();
 
-    const filter =
-        String(condition.filter ?? "")
-            .toLowerCase();
+    const filter = String(condition.filter ?? "").toLowerCase();
 
     switch (condition.type) {
-
       case "contains":
-        if (!cell.includes(filter))
-          return false;
+        if (!cell.includes(filter)) return false;
         break;
 
       case "notContains":
-        if (cell.includes(filter))
-          return false;
+        if (cell.includes(filter)) return false;
         break;
 
       case "equals":
-        if (cell !== filter)
-          return false;
+        if (cell !== filter) return false;
         break;
 
       case "notEqual":
-        if (cell === filter)
-          return false;
+        if (cell === filter) return false;
         break;
 
       case "startsWith":
-        if (!cell.startsWith(filter))
-          return false;
+        if (!cell.startsWith(filter)) return false;
         break;
 
       case "endsWith":
-        if (!cell.endsWith(filter))
-          return false;
+        if (!cell.endsWith(filter)) return false;
         break;
 
       case "blank":
-        if (cell !== "")
-          return false;
+        if (cell !== "") return false;
         break;
 
       case "notBlank":
-        if (cell === "")
-          return false;
+        if (cell === "") return false;
         break;
     }
   }
@@ -386,54 +306,38 @@ function matchesFilters(
  * AG Grid sortModel compatible
  */
 function compareRows(
-    a: CsvRow,
-    b: CsvRow,
-    sortModel: Array<{
-      colId: string;
-      sort: "asc" | "desc";
-    }>,
+  a: CsvRow,
+  b: CsvRow,
+  sortModel: Array<{
+    colId: string;
+    sort: "asc" | "desc";
+  }>,
 ): number {
-
   for (const sort of sortModel) {
+    const av = a[sort.colId];
 
-    const av =
-        a[sort.colId];
-
-    const bv =
-        b[sort.colId];
+    const bv = b[sort.colId];
 
     let cmp = 0;
 
     /**
      * NUMBER SORT
      */
-    if (
-        typeof av === "number" &&
-        typeof bv === "number"
-    ) {
+    if (typeof av === "number" && typeof bv === "number") {
       cmp = av - bv;
-    }
+    } else {
 
     /**
      * STRING SORT
      */
-    else {
-      cmp =
-          String(av ?? "")
-              .localeCompare(
-                  String(bv ?? ""),
-                  undefined,
-                  {
-                    numeric: true,
-                    sensitivity: "base",
-                  },
-              );
+      cmp = String(av ?? "").localeCompare(String(bv ?? ""), undefined, {
+        numeric: true,
+        sensitivity: "base",
+      });
     }
 
     if (cmp !== 0) {
-      return sort.sort === "asc"
-          ? cmp
-          : -cmp;
+      return sort.sort === "asc" ? cmp : -cmp;
     }
   }
 
@@ -443,27 +347,22 @@ function compareRows(
 // ─── Single-row mutations ──────────────────────────────────────────────────
 
 export async function updateRow(
-    rowIndex: number,
-    updates: Partial<CsvRow>,
+  rowIndex: number,
+  updates: Partial<CsvRow>,
 ): Promise<void> {
   await db.csv_rows.update(rowIndex, updates);
 }
 
-
-export async function deleteRow(
-    rowIndex: number,
-): Promise<void> {
+export async function deleteRow(rowIndex: number): Promise<void> {
   await db.csv_rows.delete(rowIndex);
 }
 
 // ─── Export all rows as JSON (for S3 upload) ──────────────────────────────
 
 export async function exportAllRows(
-    callback: (row: CsvRow) => void | Promise<void>,
+  callback: (row: CsvRow) => void | Promise<void>,
 ): Promise<void> {
-  await db.csv_rows
-      .orderBy("rowIndex")
-      .each(async (row) => {
-        await callback(row);
-      });
+  await db.csv_rows.orderBy("rowIndex").each(async (row) => {
+    await callback(row);
+  });
 }

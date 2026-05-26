@@ -1,73 +1,91 @@
-# React + TypeScript + Vite
+# Clearest Health Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React + TypeScript admin console for uploading large CSV datasets, reviewing/editing them efficiently, and generating MRF artifacts through authenticated backend workflows.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19 + TypeScript + Vite
+- Mantine UI for components/theme
+- MobX (`mobx`, `mobx-react-lite`) for app/workflow state
+- AG Grid Enterprise for high-performance data grids
+- Dexie + IndexedDB for local large-row storage
+- AWS Amplify Auth (Cognito hosted UI, Google social login)
 
-## React Compiler
+## Core Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Cognito-authenticated access to protected pages
+- 3-step CSV workflow:
+  - Upload CSV and stream parse in chunks
+  - Review/edit/delete rows in AG Grid (infinite row model)
+  - Generate and upload MRF payload via presigned S3 upload
+- Jobs/MRF list page with status and links
+- Public read-only MRF JSON preview by job id
+- Light/dark theme toggle persisted in local storage
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- `src/main.tsx`: App bootstrap + Amplify configuration
+- `src/App.tsx`: Providers, global theme, routing, route guards
+- `src/stores/csvStore.ts`: MobX store for CSV workflow metadata/state
+- `src/services/indexdbService.ts`: IndexedDB read/write/query/mutation layer
+- `src/services/api/jobsApi.ts`: Jobs API client functions
+- `src/utils/authFetch.ts`: Authenticated fetch helper (Bearer token)
+- `src/pages/generate-csv/*`: Upload, review, and generate MRF flow
+- `src/pages/mrf-files/MRFFilesPage.tsx`: Jobs table
+- `src/pages/public-mrf-file-view/PublicMRFFileViewPage.tsx`: Public MRF viewer
+- `src/pages/auth/*`: Login and route guard
+- `src/components/common/Sidebar.tsx`: Shared app shell/navigation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Environment Variables
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Configured in `.env` (see `.env.example` for sample keys):
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `VITE_AWS_REGION`
+- `VITE_COGNITO_USER_POOL_ID`
+- `VITE_COGNITO_CLIENT_ID`
+- `VITE_COGNITO_DOMAIN`
+- `VITE_API_BASE_URL`
+- `VITE_MANTINE_LICENSE_KEY`
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Run dev server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+Build production bundle:
+
+```bash
+npm run build
+```
+
+Preview production build:
+
+```bash
+npm run preview
+```
+
+## Routing Summary
+
+- `/login`: Authentication page
+- `/`: Protected CSV stepper workflow
+- `/mrf-files`: Protected jobs/MRF listing
+- `/public/mrf-file-view/:jobId`: Public MRF JSON preview
+
+## Data Flow (High Level)
+
+1. User signs in through Cognito hosted UI.
+2. CSV is parsed in chunks and written directly to IndexedDB (not kept in full memory).
+3. Review grid fetches only visible slices from IndexedDB and supports edit/delete.
+4. Final submission exports normalized rows, requests presigned upload URL, uploads JSON to S3.
+5. Jobs page retrieves processing status and output file links from backend.
+
+For full architecture and component-level details, see [DESIGN.md](./DESIGN.md).

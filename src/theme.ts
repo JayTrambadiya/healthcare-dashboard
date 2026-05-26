@@ -1,0 +1,66 @@
+import { createTheme } from "@mantine/core";
+
+export const appTheme = createTheme({
+  primaryColor: "primary",
+  fontFamily: "Inter, system-ui, -apple-system, Segoe UI, sans-serif",
+  defaultRadius: "md",
+  colors: {
+    primary: [
+      "#e8f4ea",
+      "#d0e8dō4",
+      "#baf0be",
+      "#9fd3a4",
+      "#77a97c",
+      "#396842",
+      "#21502c",
+      "#0b3d1b",
+      "#00260c",
+      "#001c09",
+    ],
+    tealbrand: [
+      "#e7f7f7",
+      "#d2f1f0",
+      "#b1eeed",
+      "#95d1d1",
+      "#78b6b6",
+      "#2d6a6a",
+      "#2a6767",
+      "#1f5454",
+      "#074f4f",
+      "#002f2f",
+    ],
+    neutral: [
+      "#ffffff",
+      "#f8faf9",
+      "#f3f4f3",
+      "#edeeed",
+      "#e7e8e7",
+      "#e1e3e2",
+      "#c1c9be",
+      "#717970",
+      "#414941",
+      "#191c1c",
+    ],
+  },
+  spacing: {
+    xs: "8px",
+    sm: "12px",
+    md: "16px",
+    lg: "24px",
+    xl: "32px",
+  },
+  radius: {
+    sm: "0.25rem",
+    md: "0.75rem",
+    lg: "1rem",
+    xl: "1.5rem",
+  },
+  headings: {
+    fontFamily: "Inter, system-ui, -apple-system, Segoe UI, sans-serif",
+    sizes: {
+      h1: { fontSize: "32px", lineHeight: "40px", fontWeight: "600" },
+      h2: { fontSize: "24px", lineHeight: "32px", fontWeight: "600" },
+      h3: { fontSize: "18px", lineHeight: "24px", fontWeight: "600" },
+    },
+  },
+});

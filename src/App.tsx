@@ -1,27 +1,98 @@
-import { LicenseManager, AllEnterpriseModule } from "ag-grid-enterprise";
+import { AllEnterpriseModule, LicenseManager } from "ag-grid-enterprise";
 import { ModuleRegistry } from "ag-grid-community";
 import { AgGridProvider } from "ag-grid-react";
 import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
+import "@aws-amplify/ui-react/styles.css";
 import { MantineProvider } from "@mantine/core";
-import CSVUploadPage from "./CSVUploadPage";
+import { Notifications } from "@mantine/notifications";
+import { useLocalStorage } from "@mantine/hooks";
+import { useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { signOut } from "aws-amplify/auth";
+import { Authenticator } from "@aws-amplify/ui-react";
+import MRFFilesPage from "./pages/mrf-files/MRFFilesPage";
+import LoginPage from "./pages/auth/LoginPage";
+import ProtectedRoute from "./pages/auth/ProtectedRoute";
+import PublicMRFFileViewPage from "./pages/public-mrf-file-view/PublicMRFFileViewPage";
+import { appTheme } from "./theme";
+import { MANTINE_LICENSE_KEY } from "./constants";
+import CSVStepper from "./pages/generate-csv/CSVStepper.tsx";
 
-// Set enterprise license key
-LicenseManager.setLicenseKey(
-  "[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-129757}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{20 June 2026}____[v3]_[0102]_MTc4MTkxMDAwMDAwMA==9cd58759b550e76550a45df986bdf2dc",
-);
-
-// Replace AllCommunityModule with AllEnterpriseModule
-
-// In AG Grid v32+, you register modules like this globally or pass them to AgGridProvider
+LicenseManager.setLicenseKey(MANTINE_LICENSE_KEY);
 ModuleRegistry.registerModules([AllEnterpriseModule]);
-
 const modules = [AllEnterpriseModule];
 
 function App() {
+  const [colorScheme, setColorScheme] = useLocalStorage<"light" | "dark">({
+    key: "app-color-scheme",
+    defaultValue: "light",
+  });
+
+  const isDark = colorScheme === "dark";
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", isDark);
+  }, [isDark]);
+
+  const handleToggleTheme = () => {
+    setColorScheme(isDark ? "light" : "dark");
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } finally {
+      window.location.replace("/login");
+    }
+  };
+
   return (
     <AgGridProvider modules={modules}>
-      <MantineProvider>
-        <CSVUploadPage />
+      <MantineProvider
+        theme={appTheme}
+        defaultColorScheme={colorScheme}
+        forceColorScheme={colorScheme}
+      >
+        <Notifications position="top-right" />
+        <Authenticator.Provider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/public/mrf-file-view/:jobId"
+                element={<PublicMRFFileViewPage isDark={isDark} />}
+              />
+
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <CSVStepper
+                      isDark={isDark}
+                      onToggleTheme={handleToggleTheme}
+                      onLogout={handleLogout}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/mrf-files"
+                element={
+                  <ProtectedRoute>
+                    <MRFFilesPage
+                      isDark={isDark}
+                      onToggleTheme={handleToggleTheme}
+                      onLogout={handleLogout}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </Authenticator.Provider>
       </MantineProvider>
     </AgGridProvider>
   );

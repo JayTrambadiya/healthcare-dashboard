@@ -1,5 +1,6 @@
-@import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
 :root {
     --vc-surface: #f8faf9;
@@ -24,6 +25,12 @@ body {
     font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
     color: var(--vc-text);
     background: var(--vc-surface);
+    transition: background-color 160ms ease, color 160ms ease;
+}
+
+html.dark body {
+    background: #191c1c;
+    color: #f0f1f0;
 }
 
 .vc-shell {
@@ -133,4 +140,9 @@ body {
     .vc-main {
         padding: 16px;
     }
+}
+
+:root[data-mantine-color-scheme="dark"] {
+    --mantine-color-text: #f5f7f5;
+    --mantine-color-dimmed: #d5ddd5;
 }

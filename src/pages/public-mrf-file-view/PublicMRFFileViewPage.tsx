@@ -117,7 +117,7 @@ const PublicMRFFileViewPage: React.FC<{ isDark: boolean }> = () => {
 
           {loading ? (
             <Group justify="center" py="xl">
-              <Loader size="sm" />
+              <Loader size="sm" color="teal" />
             </Group>
           ) : (
             <>

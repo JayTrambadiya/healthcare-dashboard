@@ -14,7 +14,7 @@ import { Link } from "react-router-dom";
 import { AgGridReact } from "ag-grid-react";
 import type { ColDef } from "ag-grid-community";
 import { themeQuartz } from "ag-grid-community";
-import AppNavbar from "../../components/common/AppNavbar";
+import Sidebar from "../../components/common/Sidebar";
 import { fetchAllJobs, type JobRecord } from "../../services/api/jobsApi";
 import { JOB_STATUS } from "../../utils/enums.ts";
 
@@ -172,14 +172,12 @@ const MRFFilesPage: React.FC<MRFFilesPageProps> = ({
   );
 
   return (
-    <div className="min-h-screen">
-      <AppNavbar
+    <Sidebar
         isDark={isDark}
         onToggleTheme={onToggleTheme}
         onLogout={onLogout}
-      />
-
-      <div className="mx-auto max-w-[1400px] p-6">
+      >
+      <div className="w-full p-6">
         <Stack gap="md">
           <Group justify="space-between" align="center">
             <Title
@@ -222,7 +220,7 @@ const MRFFilesPage: React.FC<MRFFilesPageProps> = ({
           </Card>
         </Stack>
       </div>
-    </div>
+    </Sidebar>
   );
 };
 

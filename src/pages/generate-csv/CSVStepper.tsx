@@ -3,7 +3,6 @@ import { observer } from "mobx-react-lite";
 import {
   Box,
   Card,
-  Container,
   Stack,
   Stepper,
   Text,
@@ -14,7 +13,7 @@ import UploadCSV from "./components/UploadCSV.tsx";
 import GenerateMRF from "./components/GenerateMRF.tsx";
 import { csvStore } from "../../stores/csvStore.ts";
 import ReviewCSV from "./components/ReviewCSV.tsx";
-import AppNavbar from "../../components/common/AppNavbar.tsx";
+import Sidebar from "../../components/common/Sidebar.tsx";
 
 type CSVUploadPageProps = {
   isDark: boolean;
@@ -51,20 +50,16 @@ const CSVStepper: React.FC<CSVUploadPageProps> = observer(
     const isReviewStep = csvStore.currentStep === 1;
 
     return (
-      <div
-        className={`h-screen overflow-hidden flex flex-col ${isDark ? "text-gray-100bg-[#191c1c]" : "bg-white text-gray-900"}`}
-      >
-        <AppNavbar
+      <Sidebar
           isDark={isDark}
           onToggleTheme={onToggleTheme}
           onLogout={onLogout}
-        />
-        <div className="flex-1 min-h-0">
-          <Container
-            size="xl"
-            py="xl"
-            h="100%"
+        >
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div
+            className="w-full px-6 py-6"
             style={{
+              height: "100%",
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
@@ -140,9 +135,9 @@ const CSVStepper: React.FC<CSVUploadPageProps> = observer(
                 </Box>
               </Card>
             </Stack>
-          </Container>
+          </div>
         </div>
-      </div>
+      </Sidebar>
     );
   },
 );
